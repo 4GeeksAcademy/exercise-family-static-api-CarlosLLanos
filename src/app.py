@@ -28,12 +28,13 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-
+#get para obtener todos los members almacenados.
 @app.route('/members', methods=['GET'])
 def handle_members():
     members = jackson_family.get_all_members()
     return jsonify(members), 200
 
+#2º get para obtener un member segun su ID de forma individual y error en cado de no encontrarlo.
 @app.route('/members/<int:member_id>', methods=['GET'])
 def get_member(member_id):
     member = jackson_family.get_member(member_id)
@@ -42,6 +43,7 @@ def get_member(member_id):
     else:
         return jsonify({"error": "Member not found"}), 404
 
+#POST para poder añadir nuevos members y error en caso de no encontrarlo.
 @app.route('/members', methods=['POST'])
 def add_member():
     try:
@@ -57,7 +59,7 @@ def add_member():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-
+#DELETE para poder ubicar y borrar un member, encaso de no ubicarlo, error.
 @app.route('/members/<int:member_id>', methods=['DELETE'])
 def delete_member(member_id):
     member = jackson_family.get_member(member_id)
