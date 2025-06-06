@@ -2,8 +2,8 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for
-from flask_cors import CORS
+from flask import Flask, request, jsonify, url_for # type: ignore
+from flask_cors import CORS # type: ignore
 from utils import APIException, generate_sitemap
 from datastructures import FamilyStructure
 # from models import Person
@@ -30,14 +30,44 @@ def sitemap():
 
 
 @app.route('/members', methods=['GET'])
-def handle_hello():
-    # This is how you can use the Family datastructure by calling its methods
+def handle_members():
     members = jackson_family.get_all_members()
-    response_body = {"hello": "world",
-                     "family": members}
-    return jsonify(response_body), 200
+    return jsonify(members), 200
 
+@app.route('/members/<int:member_id>', methods=['GET'])
+def get_member(member_id):
+    member = jackson_family.get_member(member_id)
+    if member:
+        return jsonify(member), 200
+    else:
+        return jsonify({"error": "Member not found"}), 404
 
+@app.route('/members', methods=['POST'])
+def add_member():
+    try:
+        member = request.get_json()
+        if not member:
+            return jsonify({"error": "Invalid JSON"}), 400
+        required_fields = ["first_name", "age", "lucky_numbers"]
+        if not all(field in member for field in required_fields):
+            return jsonify({"error": "Missing fields"}), 400
+
+        new_member = jackson_family.add_member(member)
+        return jsonify(new_member), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/members/<int:member_id>', methods=['DELETE'])
+def delete_member(member_id):
+    member = jackson_family.get_member(member_id)
+    if member:
+        jackson_family.delete_member(member_id)
+        return jsonify({"done": True}), 200
+    else:
+        return jsonify({"error": "Member not found"}), 404
+
+        
 
 # This only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
